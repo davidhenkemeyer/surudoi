@@ -3,521 +3,93 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>API Tester</title>
-    <style>
-        body {
-            font-family: Arial, sans-serif;
-        }
-        .container {
-            max-width: 800px;
-            margin: 0 auto;
-            padding: 20px;
-        }
-        .form-group {
-            margin-bottom: 15px;
-        }
-        label {
-            display: block;
-            margin-bottom: 5px;
-        }
-        input, select, textarea {
-            width: 100%;
-            padding: 8px;
-            box-sizing: border-box;
-        }
-        button {
-            padding: 10px 15px;
-            background-color: #007BFF;
-            color: white;
-            border: none;
-            cursor: pointer;
-        }
-        button:hover {
-            background-color: #0056b3;
-        }
-    </style>
+    <title>Store Selection</title>
 </head>
 <body>
-    <div class="container">
-        <h1>API Tester</h1>
-        
-        <!-- Create User -->
-        <div class="form-group">
-            <h2>Create User</h2>
-            <label for="username">Username:</label>
-            <input type="text" id="username" placeholder="Enter username">
-            <label for="password">Password:</label>
-            <input type="password" id="password" placeholder="Enter password">
-            <label for="company_id">Company ID:</label>
-            <input type="number" id="company_id" placeholder="Enter company ID">
-            <label for="role">Role:</label>
-            <select id="role">
-                <option value="User">User</option>
-                <option value="CompanyAdmin">CompanyAdmin</option>
-                <option value="SuperAdmin">SuperAdmin</option>
-            </select>
-            <button onclick="createUser()">Create User</button>
-        </div>
+    <h2>Select a Store</h2>
+    <div id="storeList"></div>
 
-        <!-- Login -->
-        <div class="form-group">
-            <h2>Login</h2>
-            <label for="login_username">Username:</label>
-            <input type="text" id="login_username" placeholder="Enter username">
-            <label for="login_password">Password:</label>
-            <input type="password" id="login_password" placeholder="Enter password">
-            <button onclick="login()">Login</button>
-        </div>
-
-        <!-- Create Company -->
-        <div class="form-group">
-            <h2>Create Company</h2>
-            <label for="company_name">Company Name:</label>
-            <input type="text" id="company_name" placeholder="Enter company name">
-            <label for="street_address">Street Address:</label>
-            <input type="text" id="street_address" placeholder="Enter street address">
-            <label for="city">City:</label>
-            <input type="text" id="city" placeholder="Enter city">
-            <label for="state">State:</label>
-            <input type="text" id="state" placeholder="Enter state">
-            <label for="zip_code">Zip Code:</label>
-            <input type="text" id="zip_code" placeholder="Enter zip code">
-            <label for="phone_number">Phone Number:</label>
-            <input type="text" id="phone_number" placeholder="Enter phone number">
-            <button onclick="createCompany()">Create Company</button>
-        </div>
-
-        <!-- Create Location -->
-        <div class="form-group">
-            <h2>Create Location</h2>
-            <label for="location_company_id">Company ID:</label>
-            <input type="number" id="location_company_id" placeholder="Enter company ID">
-            <label for="location_address">Address:</label>
-            <input type="text" id="location_address" placeholder="Enter address">
-            <label for="location_city">City:</label>
-            <input type="text" id="location_city" placeholder="Enter city">
-            <label for="location_state">State:</label>
-            <input type="text" id="location_state" placeholder="Enter state">
-            <label for="location_zip_code">Zip Code:</label>
-            <input type="text" id="location_zip_code" placeholder="Enter zip code">
-            <label for="location_phone_number">Phone Number:</label>
-            <input type="text" id="location_phone_number" placeholder="Enter phone number">
-            <button onclick="createLocation()">Create Location</button>
-        </div>
-
-        <!-- Set Location Hours -->
-        <div class="form-group">
-            <h2>Set Location Hours</h2>
-            <label for="hours_company_id">Company ID:</label>
-            <input type="number" id="hours_company_id" placeholder="Enter company ID">
-            <label for="hours_location_id">Location ID:</label>
-            <input type="number" id="hours_location_id" placeholder="Enter location ID">
-            <label for="hours">Hours:</label>
-            <textarea id="hours" placeholder="Enter hours (e.g., Mon-Fri 9am-5pm)"></textarea>
-            <button onclick="setLocationHours()">Set Hours</button>
-        </div>
-
-        <!-- Set Location Scheduling Type -->
-        <div class="form-group">
-            <h2>Set Location Scheduling Type</h2>
-            <label for="scheduling_company_id">Company ID:</label>
-            <input type="number" id="scheduling_company_id" placeholder="Enter company ID">
-            <label for="scheduling_location_id">Location ID:</label>
-            <input type="number" id="scheduling_location_id" placeholder="Enter location ID">
-            <label for="scheduling_type">Scheduling Type:</label>
-            <input type="text" id="scheduling_type" placeholder="Enter scheduling type">
-            <button onclick="setLocationSchedulingType()">Set Scheduling Type</button>
-        </div>
-
-        <!-- Create Timeslot -->
-        <div class="form-group">
-            <h2>Create Timeslot</h2>
-            <label for="timeslot_location_id">Location ID:</label>
-            <input type="number" id="timeslot_location_id" placeholder="Enter location ID">
-            <label for="begin_time">Begin Time:</label>
-            <input type="datetime-local" id="begin_time">
-            <label for="duration">Duration (minutes):</label>
-            <input type="number" id="duration" placeholder="Enter duration in minutes">
-            <button onclick="createTimeslot()">Create Timeslot</button>
-        </div>
-
-        <!-- Join Waitlist -->
-        <div class="form-group">
-            <h2>Join Waitlist</h2>
-            <label for="waitlist_company_id">Company ID:</label>
-            <input type="number" id="waitlist_company_id" placeholder="Enter company ID">
-            <label for="waitlist_location_id">Location ID:</label>
-            <input type="number" id="waitlist_location_id" placeholder="Enter location ID">
-            <button onclick="joinWaitlist()">Join Waitlist</button>
-        </div>
-
-        <!-- Reserve Timeslot -->
-        <div class="form-group">
-            <h2>Reserve Timeslot</h2>
-            <label for="reserve_company_id">Company ID:</label>
-            <input type="number" id="reserve_company_id" placeholder="Enter company ID">
-            <label for="reserve_location_id">Location ID:</label>
-            <input type="number" id="reserve_location_id" placeholder="Enter location ID">
-            <label for="reserve_timeslot_id">Timeslot ID:</label>
-            <input type="number" id="reserve_timeslot_id" placeholder="Enter timeslot ID">
-            <button onclick="reserveTimeslot()">Reserve Timeslot</button>
-        </div>
-
-        <!-- Get Companies -->
-        <div class="form-group">
-            <h2>Get Companies</h2>
-            <button onclick="getCompanies()">Get Companies</button>
-            <div id="companies_list"></div>
-        </div>
-
-        <!-- Get Locations -->
-        <div class="form-group">
-            <h2>Get Locations</h2>
-            <label for="get_locations_company_id">Company ID:</label>
-            <input type="number" id="get_locations_company_id" placeholder="Enter company ID">
-            <button onclick="getLocations()">Get Locations</button>
-            <div id="locations_list"></div>
-        </div>
-
-        <!-- Get Users -->
-        <div class="form-group">
-            <h2>Get Users</h2>
-            <label for="get_users_company_id">Company ID:</label>
-            <input type="number" id="get_users_company_id" placeholder="Enter company ID">
-            <button onclick="getUsers()">Get Users</button>
-            <div id="users_list"></div>
-        </div>
-
-        <!-- Get Timeslots -->
-        <div class="form-group">
-            <h2>Get Timeslots</h2>
-            <label for="get_timeslots_company_id">Company ID:</label>
-            <input type="number" id="get_timeslots_company_id" placeholder="Enter company ID">
-            <label for="get_timeslots_location_id">Location ID:</label>
-            <input type="number" id="get_timeslots_location_id" placeholder="Enter location ID">
-            <button onclick="getTimeslots()">Get Timeslots</button>
-            <div id="timeslots_list"></div>
-		</div>
-		
-		<div class="form-group">
-			<h2>Delete Company</h2>
-            <label for="delete_company_company_id">Company ID:</label>
-			<input type="number" id="delete_company_company_id" placeholder="Enter company ID">
-            <button onclick="deleteCompany()">Delete Company</button>
-        </div>
-		
-		<div class="form-group">
-			<h2>Delete Location</h2>
-            <label for="delete_location_company_id">Company ID:</label>
-			<input type="number" id="delete_location_company_id" placeholder="Enter company ID">
-            <label for="delete_location_location_id">Location ID:</label>
-            <input type="number" id="delete_location_location_id" placeholder="Enter location ID">
-
-            <button onclick="deleteLocation()">Delete Location</button>
-        </div>
-		
-		<div class="form-group">
-			<h2>Delete User</h2>
-            <label for="delete_user_user_id">User ID:</label>
-			<input type="number" id="delete_user_user_id" placeholder="Enter user ID">
-			<label for="delete_user_company_id">Company ID:</label>
-			<input type="number" id="delete_user_company_id" placeholder="Enter company ID">
-            <button onclick="deleteUser()">Delete User</button>
-        </div>
-		
-		<div class="form-group">
-			<h2>Delete Timeslot</h2>
-            <label for="delete_timeslot_company_id">Company ID:</label>
-			<input type="number" id="delete_timeslot_company_id" placeholder="Enter company ID">
-            <label for="delete_timeslot_location_id">Location ID:</label>
-            <input type="number" id="delete_timeslot_location_id" placeholder="Enter location ID">
-            <label for="delete_timeslot_id">Timeslot ID:</label>
-            <input type="number" id="delete_timeslot_id" placeholder="Enter timeslot ID">
-            <button onclick="deleteTimeslot()">Delete Timeslot</button>
-        </div>
-        <!-- Reset Data -->
-        <div class="form-group">
-            <h2>Reset Data</h2>
-            <label for="reset_data_company_id">Company ID:</label>
-            <input type="number" id="reset_data_company_id" placeholder="Enter company ID">
-            <button onclick="resetData()">Reset Data</button>
-        </div>
-    </div>
-	
     <script>
-        let accessToken = '';
-
-        function createUser() {
-            const username = document.getElementById('username').value;
-            const password = document.getElementById('password').value;
-            const company_id = document.getElementById('company_id').value;
-            const role = document.getElementById('role').value;
-
-            fetch('/create_user', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password, company_id, role })
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
+        function getLocation() {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(showPosition, showError);
+            } else {
+                document.getElementById('storeList').innerHTML = "Geolocation is not supported by this browser.";
+            }
         }
 
-        function login() {
-            const username = document.getElementById('login_username').value;
-            const password = document.getElementById('login_password').value;
-
-            fetch('/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json'
-                },
-                body: JSON.stringify({ username, password })
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.access_token) {
-                    accessToken = data.access_token;
-                    alert('Login successful');
-                } else {
-                    alert(data.message);
-                }
-            });
-        }
-
-        function createCompany() {
-            const name = document.getElementById('company_name').value;
-            const street_address = document.getElementById('street_address').value;
-            const city = document.getElementById('city').value;
-            const state = document.getElementById('state').value;
-            const zip_code = document.getElementById('zip_code').value;
-            const phone_number = document.getElementById('phone_number').value;
-
-            fetch('/create_company', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                body: JSON.stringify({ name, street_address, city, state, zip_code, phone_number })
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
-        }
-
-        function createLocation() {
-            const company_id = document.getElementById('location_company_id').value;
-            const address = document.getElementById('location_address').value;
-            const city = document.getElementById('location_city').value;
-            const state = document.getElementById('location_state').value;
-            const zip_code = document.getElementById('location_zip_code').value;
-            const phone_number = document.getElementById('location_phone_number').value;
-
-            fetch('/create_location', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                body: JSON.stringify({ company_id, address, city, state, zip_code, phone_number })
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
-        }
-
-        function createTimeslot() {
-            const location_id = document.getElementById('timeslot_location_id').value;
-            const begin_time = document.getElementById('begin_time').value;
-            const duration = document.getElementById('duration').value;
-
-            fetch('/create_timeslot', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                body: JSON.stringify({ location_id, begin_time, duration })
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
-        }
-
-        function joinWaitlist() {
-            const location_id = document.getElementById('waitlist_location_id').value;
-
-            fetch('/join_waitlist', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                body: JSON.stringify({ location_id })
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
-        }
-
-        function reserveTimeslot() {
-            const timeslot_id = document.getElementById('reserve_timeslot_id').value;
-
-            fetch('/reserve', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${accessToken}`
-                },
-                body: JSON.stringify({ timeslot_id })
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
-        }
-
-        function getCompanies() {
-            fetch('/get_companies', {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const companiesList = document.getElementById('companies_list');
-                companiesList.innerHTML = data.join('<br>');
-            });
-        }
-
-        function getLocations() {
-            const company_id = document.getElementById('get_locations_company_id').value;
-
-            fetch(`/get_locations/${company_id}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const locationsList = document.getElementById('locations_list');
-                locationsList.innerHTML = data.join('<br>');
-            });
-        }
-
-        function getUsers() {
-            const company_id = document.getElementById('get_users_company_id').value;
-
-            fetch(`/get_users/${company_id}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const usersList = document.getElementById('users_list');
-                usersList.innerHTML = data.join('<br>');
-            });
-        }
-
-        function getTimeslots() {
-            const company_id = document.getElementById('get_timeslots_company_id').value;
-            const location_id = document.getElementById('get_timeslots_location_id').value;
-
-            fetch(`/get_timeslots/${company_id}/${location_id}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const timeslotsList = document.getElementById('timeslots_list');
-                timeslotsList.innerHTML = data.join('<br>');
-            });
-        }
-
-        function getWaitTime() {
-            const company_id = document.getElementById('get_wait_time_company_id').value;
-            const location_id = document.getElementById('get_wait_time_location_id').value;
-
-            fetch(`/get_wait_time/${company_id}/${location_id}`, {
-                method: 'GET',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => {
-                const waitTime = document.getElementById('wait_time');
-                waitTime.innerHTML = data.wait_time;
-            });
-        }
-
-        function deleteCompany() {
-            const company_id = document.getElementById('delete_company_id').value;
-
-            fetch(`/delete_company/${company_id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
-        }
-
-        function deleteLocation() {
-            const location_id = document.getElementById('delete_location_id').value;
-
-            fetch(`/delete_location/${location_id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
-        }
-
-        function deleteUser() {
-            const user_id = document.getElementById('delete_user_id').value;
-
-            fetch(`/delete_user/${user_id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
-        }
-
-        function deleteTimeslot() {
-            const company_id = document.getElementById('delete_timeslot_company_id').value;
-            const location_id = document.getElementById('delete_timeslot_location_id').value;
-            const timeslot_id = document.getElementById('delete_timeslot_id').value;
-
-            fetch(`/delete_timeslot/${company_id}/${location_id}/${timeslot_id}`, {
-                method: 'DELETE',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
-        }
-
-        function resetData() {
-            const company_id = document.getElementById('reset_data_company_id').
-			fetch(`/reset_data/${company_id}`, {
-                method: 'POST',
-                headers: {
-                    'Authorization': `Bearer ${accessToken}`
-                }
-            })
-            .then(response => response.json())
-            .then(data => alert(data.message));
+	function showPosition(position) {
+	    //fetch(`/get_locations?lat=${position.coords.latitude}&lon=${position.coords.longitude}`, {
+	//	method: 'GET',
+	//	headers: {
+	//	    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+	//	}
+	 //   })
+	    fetch(`/get_locations/1`, {
+		method: 'GET',
+		headers: {
+		    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
 		}
-	</script>
+	    })
+	    .then(response => {
+		if (response.status === 401) {
+		    // Redirect to the signup page if not authenticated
+		    window.location.href = '/signup.html';  // Update this with the correct path to your signup page
+		    return;
+		}
+		return response.json();
+	    })
+		.then(data => {
+			console.log(data); // Check the structure here
+			let storeList = '<ul>';
+			if (Array.isArray(data) && data.length > 0) {
+				data.forEach(location => {
+					storeList += `<li>${location.id}. ${location.name}: ${location.address}, ${location.city}, ${location.state}, ${location.zip_code}, ${location.latitude} ${location.longitude}</li>`;
+				});
+			} else {
+				storeList += '<li>No locations found.</li>';
+			}
+			storeList += '</ul>';
+			document.getElementById('storeList').innerHTML = storeList;
+		})
+	}
+
+        function showPosition_old(position) {
+            fetch(`/get_locations/1`, {
+                method: 'GET',
+                headers: {
+                    'Authorization': `Bearer ${localStorage.getItem('access_token')}`
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                let storeList = '<ul>';
+                data.forEach(location => {
+                    storeList += `<li>${location}</li>`;
+                });
+                storeList += '</ul>';
+                document.getElementById('storeList').innerHTML = storeList;
+            });
+        }
+
+        function showError(error) {
+            switch(error.code) {
+                case error.PERMISSION_DENIED:
+                    document.getElementById('storeList').innerHTML = "User denied the request for Geolocation.";
+                    break;
+                case error.POSITION_UNAVAILABLE:
+                    document.getElementById('storeList').innerHTML = "Location information is unavailable.";
+                    break;
+                case error.TIMEOUT:
+                    document.getElementById('storeList').innerHTML = "The request to get user location timed out.";
+                    break;
+                case error.UNKNOWN_ERROR:
+                    document.getElementById('storeList').innerHTML = "An unknown error occurred.";
+                    break;
+            }
+        }
+
+        getLocation();
+    </script>
 </body>
 </html>

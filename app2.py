@@ -1,3 +1,4 @@
+import requests
 from flask import Flask, request, jsonify, render_template
 from flask_sqlalchemy import SQLAlchemy
 from flask_jwt_extended import JWTManager, create_access_token, jwt_required, get_jwt_identity
@@ -8,6 +9,8 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///database.db'
 app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'
 db = SQLAlchemy(app)
 jwt = JWTManager(app)
+
+GOOGLE_MAPS_API_KEY = 'AIzaSyB46UnqRfAn8i9dDCqTuUxmOdh99FXHcoc'
 
 # Models
 class Company(db.Model):
@@ -22,13 +25,60 @@ class Company(db.Model):
 
 class Location(db.Model):
     id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(120))
     company_id = db.Column(db.Integer, db.ForeignKey('company.id'), nullable=False)
     address = db.Column(db.String(120))
     city = db.Column(db.String(80))
     state = db.Column(db.String(80))
     zip_code = db.Column(db.String(20))
     phone_number = db.Column(db.String(20))
+    email_address = db.Column(db.String(80))
+    monday_open = db.Column(db.String(10))
+    monday_close = db.Column(db.String(10))
+    tuesday_open = db.Column(db.String(10))
+    tuesday_close = db.Column(db.String(10))
+    wednesday_open = db.Column(db.String(10))
+    wednesday_close = db.Column(db.String(10))
+    thursday_open = db.Column(db.String(10))
+    thursday_close = db.Column(db.String(10))
+    friday_open = db.Column(db.String(10))
+    friday_close = db.Column(db.String(10))
+    saturday_open = db.Column(db.String(10))
+    saturday_close = db.Column(db.String(10))
+    sunday_open = db.Column(db.String(10))
+    sunday_close = db.Column(db.String(10))
+    latitude = db.Column(db.Text)
+    longitude = db.Column(db.Text)
     timeslots = db.relationship('Timeslot', backref='location', lazy=True)
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name,
+            'company_id': self.company_id,
+            'address': self.address,
+            'city': self.city,
+            'state': self.state,
+            'zip_code': self.zip_code,
+            'phone_number': self.phone_number,
+            'email_address': self.email_address,
+            'monday_open': self.monday_open,
+            'monday_close': self.monday_close,
+            'tuesday_open': self.tuesday_open,
+            'tuesday_close': self.tuesday_close,
+            'wednesday_open': self.wednesday_open,
+            'wednesday_close': self.wednesday_close,
+            'thursday_open': self.thursday_open,
+            'thursday_close': self.thursday_close,
+            'friday_open': self.friday_open,
+            'friday_close': self.friday_close,
+            'saturday_open': self.saturday_open,
+            'saturday_close': self.saturday_close,
+            'sunday_open': self.sunday_open,
+            'sunday_close': self.sunday_close,
+            'latitude': self.latitude,
+            'longitude': self.longitude
+        }
 
 class User(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -43,13 +93,14 @@ class Timeslot(db.Model):
     begin_time = db.Column(db.DateTime, nullable=False)
     duration = db.Column(db.Integer, nullable=False)
 
+      
 # Routes
 @app.route('/')
 def index():
     return render_template('index.html')
 
 @app.route('/create_company', methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def create_company():
     current_user = get_jwt_identity()
     if current_user['role'] != 'SuperAdmin':
@@ -69,7 +120,7 @@ def create_company():
     return jsonify({'message': 'Company created successfully'}), 201
 
 @app.route('/create_location', methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def create_location():
     current_user = get_jwt_identity()
     if current_user['role'] not in ['SuperAdmin', 'CompanyAdmin']:
@@ -77,19 +128,37 @@ def create_location():
 
     data = request.get_json()
     new_location = Location(
+        name=data['name'],
         company_id=data['company_id'],
         address=data['address'],
         city=data['city'],
         state=data['state'],
         zip_code=data['zip_code'],
-        phone_number=data['phone_number']
+        phone_number=data['phone_number'],
+        email_address=data['email_address'],
+        monday_open=data['monday_open'],
+        monday_close=data['monday_close'],
+        tuesday_open=data['tuesday_open'],
+        tuesday_close=data['tuesday_close'],
+        wednesday_open=data['wednesday_open'],
+        wednesday_close=data['wednesday_close'],
+        thursday_open=data['thursday_open'],
+        thursday_close=data['thursday_close'],
+        friday_open=data['friday_open'],
+        friday_close=data['friday_close'],
+        saturday_open=data['saturday_open'],
+        saturday_close=data['saturday_close'],
+        sunday_open=data['sunday_open'],
+        sunday_close=data['sunday_close'],
+        latitude=data['latitude'],
+        longitude=data['longitude']
     )
     db.session.add(new_location)
     db.session.commit()
     return jsonify({'message': 'Location created successfully'}), 201
 
 @app.route('/set_location_hours', methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def set_location_hours():
     current_user = get_jwt_identity()
     if current_user['role'] not in ['SuperAdmin', 'CompanyAdmin']:
@@ -100,7 +169,7 @@ def set_location_hours():
     return jsonify({'message': 'Location hours set successfully'}), 200
 
 @app.route('/set_location_scheduling_type', methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def set_location_scheduling_type():
     current_user = get_jwt_identity()
     if current_user['role'] not in ['SuperAdmin', 'CompanyAdmin']:
@@ -135,7 +204,7 @@ def login():
     return jsonify({'access_token': access_token}), 200
 
 @app.route('/create_timeslot', methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def create_timeslot():
     current_user = get_jwt_identity()
     if current_user['role'] not in ['SuperAdmin', 'CompanyAdmin']:
@@ -152,7 +221,7 @@ def create_timeslot():
     return jsonify({'message': 'Timeslot created successfully'}), 201
 
 @app.route('/join_waitlist', methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def join_waitlist():
     current_user = get_jwt_identity()
     if current_user['role'] not in ['SuperAdmin', 'CompanyAdmin', 'User']:
@@ -163,7 +232,7 @@ def join_waitlist():
     return jsonify({'message': 'Joined waitlist successfully'}), 200
 
 @app.route('/reserve', methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def reserve():
     current_user = get_jwt_identity()
     if current_user['role'] not in ['SuperAdmin', 'CompanyAdmin', 'User']:
@@ -174,37 +243,37 @@ def reserve():
     return jsonify({'message': 'Timeslot reserved successfully'}), 200
 
 @app.route('/get_companies', methods=['GET'])
-@jwt_required()
+#@jwt_required()
 def get_companies():
     companies = Company.query.all()
     return jsonify([company.name for company in companies]), 200
 
 @app.route('/get_locations/<company_id>', methods=['GET'])
-@jwt_required()
+#@jwt_required()
 def get_locations(company_id):
     locations = Location.query.filter_by(company_id=company_id).all()
-    return jsonify([location.address for location in locations]), 200
+    return jsonify([location.to_dict() for location in locations]), 200
 
 @app.route('/get_users/<company_id>', methods=['GET'])
-@jwt_required()
+#@jwt_required()
 def get_users(company_id):
     users = User.query.filter_by(company_id=company_id).all()
     return jsonify([user.username for user in users]), 200
 
 @app.route('/get_timeslots/<company_id>/<location_id>', methods=['GET'])
-@jwt_required()
+#@jwt_required()
 def get_timeslots(company_id, location_id):
     timeslots = Timeslot.query.filter_by(location_id=location_id).all()
     return jsonify([timeslot.begin_time for timeslot in timeslots]), 200
 
 @app.route('/get_wait_time/<company_id>/<location_id>', methods=['GET'])
-@jwt_required()
+#@jwt_required()
 def get_wait_time(company_id, location_id):
     # Implement logic to get wait time
     return jsonify({'wait_time': '10 minutes'}), 200
 
 @app.route('/delete_company/<company_id>', methods=['DELETE'])
-@jwt_required()
+#@jwt_required()
 def delete_company(company_id):
     current_user = get_jwt_identity()
     if current_user['role'] != 'SuperAdmin':
@@ -216,7 +285,7 @@ def delete_company(company_id):
     return jsonify({'message': 'Company deleted successfully'}), 200
 
 @app.route('/delete_location/<location_id>', methods=['DELETE'])
-@jwt_required()
+#@jwt_required()
 def delete_location(location_id):
     current_user = get_jwt_identity()
     if current_user['role'] not in ['SuperAdmin', 'CompanyAdmin']:
@@ -228,7 +297,7 @@ def delete_location(location_id):
     return jsonify({'message': 'Location deleted successfully'}), 200
 
 @app.route('/delete_user/<user_id>', methods=['DELETE'])
-@jwt_required()
+#@jwt_required()
 def delete_user(user_id):
     current_user = get_jwt_identity()
     if current_user['role'] not in ['SuperAdmin', 'CompanyAdmin']:
@@ -240,7 +309,7 @@ def delete_user(user_id):
     return jsonify({'message': 'User deleted successfully'}), 200
 
 @app.route('/delete_timeslot/<company_id>/<location_id>/<timeslot_id>', methods=['DELETE'])
-@jwt_required()
+#@jwt_required()
 def delete_timeslot(company_id, location_id, timeslot_id):
     current_user = get_jwt_identity()
     if current_user['role'] not in ['SuperAdmin', 'CompanyAdmin']:
@@ -252,7 +321,7 @@ def delete_timeslot(company_id, location_id, timeslot_id):
     return jsonify({'message': 'Timeslot deleted successfully'}), 200
 
 @app.route('/reset_data/<company_id>', methods=['POST'])
-@jwt_required()
+#@jwt_required()
 def reset_data(company_id):
     current_user = get_jwt_identity()
     if current_user['role'] != 'SuperAdmin':

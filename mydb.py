@@ -7,6 +7,7 @@ import argparse
 import getpass
 
 DATABASE_URL = 'sqlite:///instance/database.db'
+# I enabled this from: https://console.cloud.google.com/google/maps-apis/home;onboard=true?project=praxis-zoo-440404-g7
 GOOGLE_MAPS_API_KEY = 'AIzaSyB46UnqRfAn8i9dDCqTuUxmOdh99FXHcoc'  # Replace with your Google Maps API key
 
 engine = create_engine(DATABASE_URL)
@@ -27,6 +28,7 @@ class Location(Base):
     __tablename__ = 'location'
     id = Column(Integer, primary_key=True)
     address = Column(String, nullable=False)
+    zip_code = Column(String, nullable=False)
 
 def create_tables():
     Base.metadata.create_all(engine)
@@ -72,23 +74,28 @@ def verify_password(username):
     else:
         print("Password is incorrect.")
 
-def get_gps_coordinates(location_id):
-    location = session.query(Location).filter_by(id=location_id).first()
-    if not location:
-        print(f"Location with ID {location_id} not found.")
-        return
-
+def get_gps_coordinates(location_id, address):
     gmaps = googlemaps.Client(key=GOOGLE_MAPS_API_KEY)
-    geocode_result = gmaps.geocode(location.address)
+    if location_id is not None:
+        location = session.query(Location).filter_by(id=location_id).first()
+        if not location:
+            print(f"Location with ID {location_id} not found.")
+            return
+        address_str = "{0}, {1}".format(location.address, location.zip_code)
+    else:
+        address_str = address
+    #geocode_result = gmaps.geocode(location.address)
+    geocode_result = gmaps.geocode(address_str)
     if geocode_result:
         loc = geocode_result[0]['geometry']['location']
-        print(f"The coordinates for the address are: ({loc['lat']}, {loc['lng']})")
+        return loc['lat'], loc['lng']
     else:
-        print("Address not found.")
+        return "n/a", "n/a"
 
 def add_record(table_name, fields):
     table = Table(table_name, metadata, autoload_with=engine)
     insert_stmt = table.insert().values(fields)
+    print("This is the insert statement: {}".format(insert_stmt))
     session.execute(insert_stmt)
     session.commit()
     print(f"Record added to {table_name} successfully.")
@@ -99,6 +106,12 @@ def view_records(table_name):
     result = session.execute(select_stmt).fetchall()
     for row in result:
         print(row)
+
+def get_records(table_name):
+    table = Table(table_name, metadata, autoload_with=engine)
+    select_stmt = table.select()
+    result = session.execute(select_stmt).fetchall()
+    return result
 
 def delete_record(table_name, record_id):
     table = Table(table_name, metadata, autoload_with=engine)
@@ -127,6 +140,63 @@ def describe_table(table_name):
     for column in table.columns:
         print(f"Column: {column.name}, Type: {column.type}, Not Null: {column.nullable}, Default Value: {column.default}, Primary Key: {column.primary_key}")
 
+def add_location():
+    companies = get_records("company")
+    for company in companies:
+        print("{0}: {1}".format(company.id, company.name))
+    company_id = "-1"    
+    while company_id not in [row.id for row in companies]:
+        company_id = int(input('Company ID (required): '))
+        if company_id not in [row.id for row in companies]:
+            print("ID not valid")
+    name = input('Name: ')
+    addr = input('Street Address: ')
+    city = input('City: ')
+    state = input('State: ')
+    zipcode = input('Zip Code: ')
+    phonenum = input('Phone Number: ')
+    email = input('Email address: ')
+    mon_o = input('Monday Opening Time (e.g. 09:00:00): ')
+    mon_c = input('Monday Closing Time (e.g. 16:00:00): ')
+    tue_o = input('Tuesday Opening Time (e.g. 09:00:00): ')
+    tue_c = input('Tuesday Closing Time (e.g. 16:00:00): ')
+    wed_o = input('Wednesday Opening Time (e.g. 09:00:00): ')
+    wed_c = input('Wednesday Closing Time (e.g. 16:00:00): ')
+    thu_o = input('Thursday Opening Time (e.g. 09:00:00): ')
+    thu_c = input('Thursday Closing Time (e.g. 16:00:00): ')
+    fri_o = input('Friday Opening Time (e.g. 09:00:00): ')
+    fri_c = input('Friday Closing Time (e.g. 16:00:00): ')
+    sat_o = input('Saturday Opening Time (e.g. 09:00:00): ')
+    sat_c = input('Saturday Closing Time (e.g. 16:00:00): ')
+    sun_o = input('Sunday Opening Time (e.g. 09:00:00): ')
+    sun_c = input('Sunday Closing Time (e.g. 16:00:00): ')
+    fields = {}
+    fields["company_id"] = company_id
+    fields["name"] = name
+    fields["address"] = addr
+    fields["city"] = city
+    fields["state"] = state
+    fields["zip_code"] = zipcode
+    fields["phone_number"] = phonenum
+    fields["email_address"] = email
+    fields["monday_open"] = mon_o
+    fields["monday_close"] = mon_c
+    fields["tuesday_open"] = tue_o
+    fields["tuesday_close"] = tue_c
+    fields["wednesday_open"] = wed_o
+    fields["wednesday_close"] = wed_c
+    fields["thursday_open"] = thu_o
+    fields["thursday_close"] = thu_c
+    fields["friday_open"] = fri_o
+    fields["friday_close"] = fri_c
+    fields["saturday_open"] = sat_o
+    fields["saturday_close"] = sat_c
+    fields["sunday_open"] = sun_o
+    fields["sunday_close"] = sun_c
+    fields["latitude"], fields["longitude"] = get_gps_coordinates(None, "{0}, {1}, {2}, {3}".format(addr, city, state, zipcode))
+    print("Adding record with {0},{1}".format(fields["latitude"], fields["longitude"]))
+    add_record("location", fields)
+    
 def main():
     create_tables()  # Ensure tables are created before any operations
 
@@ -157,13 +227,15 @@ def main():
     add_user_parser = subparsers.add_parser('add_user', help='Add a new user')
     add_user_parser.add_argument('username', help='Username')
     add_user_parser.add_argument('company_id', type=int, help='Company ID')
-    add_user_parser.add_argument('role', help='Role')
+    add_user_parser.add_argument('role', help='Role (SuperAdmin, Admin, or User)')
 
     change_password_parser = subparsers.add_parser('changepw', help='Change user password')
     change_password_parser.add_argument('username', help='Username')
 
     verify_password_parser = subparsers.add_parser('verifypw', help='Verify user password')
     verify_password_parser.add_argument('username', help='Username')
+
+    add_parser = subparsers.add_parser('add_location', help='Add a new location record')
 
     get_coordinates_parser = subparsers.add_parser('get_coordinates', help='Get GPS coordinates for a location')
     get_coordinates_parser.add_argument('location_id', type=int, help='Location ID')
@@ -185,12 +257,14 @@ def main():
         describe_table(args.table)
     elif args.command == 'add_user':
         add_user(args.username, args.company_id, args.role)
+    elif args.command == 'add_location':
+        add_location()
     elif args.command == 'changepw':
         change_password(args.username)
     elif args.command == 'verifypw':
         verify_password(args.username)
     elif args.command == 'get_coordinates':
-        get_gps_coordinates(args.location_id)
+        print("{0}".format(get_gps_coordinates(args.location_id, None)))
 
 if __name__ == '__main__':
     main()
