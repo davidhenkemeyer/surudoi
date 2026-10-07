@@ -64,11 +64,25 @@ Edit `site.json` (or point `SITE_CONFIG` at another file):
 - `"admins"` (default): store and global admins need a code; clients don't.
 - `"everyone"`: everyone needs a code.
 
+## Running several businesses (tenants)
+
+Each business is a **tenant**: a folder `tenants/<name>/` holding its `site.json` (and, by convention, its `stores.csv`). Set `SURUDOI_TENANT=<name>` and the app uses that branding plus its own `instance/<name>/` folder for the database and secret key. Tenants share code and nothing else: no stores, users, appointments or sign-ins in common. The same email signs up separately in each, and an admin of one has no rights in another. Without `SURUDOI_TENANT`, the app uses the root `site.json` and `instance/`.
+
+```bash
+# PowerShell: $env:SURUDOI_TENANT="acme-manicure"   bash: export SURUDOI_TENANT=acme-manicure
+flask --app app import-stores tenants/acme-manicure/stores.csv
+flask --app app add-user owner@acme-manicure.example --role admin
+flask --app app run --port 5001
+```
+
+In production, run one deployment per tenant (each with its own `SURUDOI_TENANT`, `SECRET_KEY` and domain).
+
 ## Configuration (environment variables)
 
 | Variable | Default | |
 |---|---|---|
 | `SECRET_KEY` | generated into `instance/secret_key` | Set this in production |
+| `SURUDOI_TENANT` | unset | Which `tenants/<name>/` business to serve |
 | `DATABASE_URL` | `sqlite:///instance/surudoi.db` | |
 | `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASSWORD`, `SMTP_FROM` | unset | Needed to email sign-in codes |
 | `SESSION_COOKIE_SECURE` | `0` | Set to `1` when served over HTTPS |

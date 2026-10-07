@@ -3,3 +3,6 @@ __pycache__/
 *.pyc
 instance/
 .pytest_cache/
+
+# Agent working files (leads, support mail, plans) - never commit
+ops/

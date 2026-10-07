@@ -1,6 +1,7 @@
 """Surudoi: a small, rebrandable appointment booking app."""
 import json
 import os
+import re
 import secrets
 from datetime import timedelta
 from pathlib import Path
@@ -56,8 +57,21 @@ def _secret_key(instance_path):
     return key
 
 
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
+
+
 def create_app(test_config=None):
-    app = Flask(__name__, instance_relative_config=True)
+    # A tenant is one independent business (brand, stores, users, bookings)
+    # served by the same code. Each gets tenants/<name>/site.json plus its own
+    # instance/<name>/ folder holding its database and secret key.
+    tenant = os.environ.get("SURUDOI_TENANT", "").strip().lower()
+    if tenant and not re.fullmatch(r"[a-z0-9][a-z0-9-]*", tenant):
+        raise ValueError(f"SURUDOI_TENANT must be lowercase letters, digits and dashes, got {tenant!r}")
+    site_config = PROJECT_ROOT / "tenants" / tenant / "site.json" if tenant else PROJECT_ROOT / "site.json"
+    if tenant and not site_config.is_file():
+        raise FileNotFoundError(f"No site config for tenant {tenant!r} at {site_config}")
+    instance_path = str(PROJECT_ROOT / "instance" / tenant) if tenant else None
+    app = Flask(__name__, instance_relative_config=True, instance_path=instance_path)
     Path(app.instance_path).mkdir(parents=True, exist_ok=True)
 
     app.config.from_mapping(
@@ -65,7 +79,11 @@ def create_app(test_config=None):
         SQLALCHEMY_DATABASE_URI=os.environ.get(
             "DATABASE_URL", "sqlite:///" + os.path.join(app.instance_path, "surudoi.db")
         ),
-        SITE_CONFIG=os.environ.get("SITE_CONFIG", str(Path(app.root_path).parent / "site.json")),
+        SITE_CONFIG=os.environ.get("SITE_CONFIG", str(site_config)),
+        TENANT=tenant,
+        # Distinct cookie names keep tenants' sign-ins apart when they share a
+        # host (e.g. two ports on localhost, where browsers share cookies).
+        SESSION_COOKIE_NAME=f"session-{tenant}" if tenant else "session",
         PERMANENT_SESSION_LIFETIME=timedelta(days=30),
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",

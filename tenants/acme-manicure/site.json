@@ -1,0 +1,22 @@
+{
+  "brand": {
+    "name": "Acme Manicure",
+    "app_name": "Acme Manicure",
+    "tagline": "Book a manicure near you",
+    "service": "Manicure",
+    "logo_text": "AM",
+    "primary_color": "#c2185b"
+  },
+  "booking": {
+    "search_radius_miles": 50,
+    "days_ahead": 21,
+    "min_lead_minutes": 120,
+    "default_price": 35,
+    "default_slot_minutes": 45,
+    "default_capacity": 3,
+    "notes_prompt": "Anything we should know? (e.g. gel, removal, nail art)"
+  },
+  "auth": {
+    "email_codes_for": "admins"
+  }
+}
