@@ -1,0 +1,47 @@
+{% macro status_pill(status) -%}
+  <span class="pill pill-{{ status }}">{{ STATUSES.get(status, status) }}</span>
+{%- endmacro %}
+
+{% macro csrf() -%}
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+{%- endmacro %}
+
+{% macro appointment_card(appt, actions=true) -%}
+  <article class="appt-card">
+    <div class="appt-when">
+      <span class="appt-month">{{ appt.starts_at.strftime('%b') }}</span>
+      <span class="appt-day">{{ appt.starts_at.day }}</span>
+      <span class="appt-weekday">{{ appt.starts_at.strftime('%a') }}</span>
+    </div>
+    <div class="appt-body">
+      <p class="eyebrow">Your {{ site.brand.service | lower }}</p>
+      <h2 class="appt-title">{{ appt.starts_at | long_date }} at {{ appt.starts_at | clock }}</h2>
+      <p class="appt-store"><strong>{{ appt.store.name }}</strong> · {{ appt.store.full_address }}</p>
+      <p class="muted small">
+        {{ appt.price_cents | money }}{% if appt.price_cents %}, paid at the store{% endif %}
+        {% if appt.store.phone %} · <a href="tel:{{ appt.store.phone }}">{{ appt.store.phone }}</a>{% endif %}
+      </p>
+      {% if appt.notes %}<p class="appt-notes">“{{ appt.notes }}”</p>{% endif %}
+      {% if actions %}
+        <div class="row gap-sm wrap mt">
+          <a class="btn btn-secondary" href="{{ url_for('client.store', store_id=appt.store_id, reschedule=1) }}">Change time</a>
+          <a class="btn btn-ghost" href="{{ url_for('client.home') }}">Pick a different store</a>
+          <form method="post" action="{{ url_for('client.cancel_appointment', appt_id=appt.id) }}"
+                data-confirm="Cancel your appointment on {{ appt.starts_at | long_date }} at {{ appt.starts_at | clock }}?">
+            {{ csrf() }}
+            <button class="btn btn-danger-ghost" type="submit">Cancel appointment</button>
+          </form>
+        </div>
+      {% endif %}
+    </div>
+  </article>
+{%- endmacro %}
+
+{% macro hours_table(store) -%}
+  <table class="hours">
+    {% for d in DAYS %}
+      {% set span = store.hours_for(d) %}
+      <tr><th>{{ DAY_NAMES[d] }}</th><td class="{{ 'muted' if not span }}">{{ span | hours_text }}</td></tr>
+    {% endfor %}
+  </table>
+{%- endmacro %}

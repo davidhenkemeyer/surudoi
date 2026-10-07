@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% block title %}Admin · {{ site.brand.app_name }}{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<div class="page-head"><h1>Overview</h1></div>
+
+<div class="stat-grid">
+  <a class="stat card" href="{{ url_for('admin.stores') }}">
+    <span class="stat-label">Stores</span>
+    <span class="stat-value">{{ stats.stores }}</span>
+    <span class="stat-sub">{{ stats.active_stores }} taking bookings</span>
+  </a>
+  <a class="stat card" href="{{ url_for('admin.users') }}">
+    <span class="stat-label">Users</span>
+    <span class="stat-value">{{ stats.users }}</span>
+    <span class="stat-sub">{{ stats.staff }} staff</span>
+  </a>
+  <div class="stat card">
+    <span class="stat-label">Open appointments</span>
+    <span class="stat-value">{{ stats.open_appts }}</span>
+    <span class="stat-sub">across all stores</span>
+  </div>
+  <a class="stat card" href="{{ url_for('admin.users', blocked=1) }}">
+    <span class="stat-label">Blocked users</span>
+    <span class="stat-value">{{ stats.blocked }}</span>
+    <span class="stat-sub">can't sign in or book</span>
+  </a>
+</div>
+
+{% if stats.unmapped %}
+  <div class="notice mt">
+    <strong>{{ stats.unmapped }} store{{ 's' if stats.unmapped > 1 }}</strong> {{ 'has' if stats.unmapped == 1 else 'have' }} no map coordinates, so clients can't find {{ 'it' if stats.unmapped == 1 else 'them' }}.
+    <a href="{{ url_for('admin.stores') }}">Fix on the Stores page →</a>
+  </div>
+{% endif %}
+
+<div class="two-col mt-lg">
+  <section class="card">
+    <h2 class="card-title">Busiest stores (open bookings)</h2>
+    {% if busiest %}
+      <ol class="rank-list">
+        {% for store, n in busiest %}
+          <li><a href="{{ url_for('manage.day', store=store.id) }}">{{ store.name }}</a><span class="muted">{{ store.city }}, {{ store.state }}</span><strong>{{ n }}</strong></li>
+        {% endfor %}
+      </ol>
+    {% else %}
+      <p class="muted">No open appointments yet.</p>
+    {% endif %}
+  </section>
+  <section class="card">
+    <h2 class="card-title">Quick actions</h2>
+    <div class="stack-sm">
+      <a class="btn btn-secondary btn-block" href="{{ url_for('admin.store_new') }}">Add a store</a>
+      <a class="btn btn-secondary btn-block" href="{{ url_for('admin.stores') }}#import">Import stores from CSV</a>
+      <a class="btn btn-secondary btn-block" href="{{ url_for('admin.users') }}#add-user">Add a user or store admin</a>
+      <a class="btn btn-ghost btn-block" href="{{ url_for('admin.store_export') }}">Download stores CSV</a>
+    </div>
+  </section>
+</div>
+{% endblock %}

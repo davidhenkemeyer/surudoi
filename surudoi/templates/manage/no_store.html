@@ -1,0 +1,13 @@
+{% extends "base.html" %}
+{% block main_class %}container narrow{% endblock %}
+{% block content %}
+<section class="card empty-state">
+  <h1>No store assigned</h1>
+  {% if current_user.is_admin %}
+    <p class="muted">There are no stores yet. Add one or import a CSV to get started.</p>
+    <a class="btn btn-primary mt" href="{{ url_for('admin.stores') }}">Go to stores</a>
+  {% else %}
+    <p class="muted">Your account isn't linked to a store yet. Ask an administrator to assign you one.</p>
+  {% endif %}
+</section>
+{% endblock %}

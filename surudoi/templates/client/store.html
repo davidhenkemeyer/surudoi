@@ -1,0 +1,104 @@
+{% extends "base.html" %}
+{% import "partials/macros.html" as m with context %}
+{% block title %}{{ store.name }} · {{ site.brand.app_name }}{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('client.home') }}">← All locations</a>
+
+<div class="store-layout">
+  <section class="card booking-card">
+    <header class="store-header">
+      <div>
+        <h1>{{ store.name }}</h1>
+        <p class="muted">{{ store.full_address }}</p>
+      </div>
+      <div class="store-facts">
+        <span class="fact"><strong>{{ store.price_cents | money }}</strong><small>{{ site.brand.service }}</small></span>
+        <span class="fact"><strong>{{ store.slot_minutes }} min</strong><small>Appointment</small></span>
+      </div>
+    </header>
+
+    {% if not store.active %}
+      <div class="flash flash-info">This location is hidden from clients and isn't taking bookings.</div>
+    {% endif %}
+
+    {% if current %}
+      <div class="notice">
+        {% if reschedule %}<strong>Rescheduling.</strong>{% endif %}
+        Your current appointment is <strong>{{ current.starts_at | day_label(today) }} at {{ current.starts_at | clock }}</strong>
+        at {{ current.store.name }}. Picking a new time below will move it — you can only hold one appointment at a time.
+      </div>
+    {% endif %}
+
+    <h2 class="section-title">Pick a day</h2>
+    <div class="day-strip" role="tablist" aria-label="Days">
+      {% for day in days %}
+        {% set n = day.slots | length %}
+        <button type="button" class="day-chip" role="tab" data-day="{{ day.date.isoformat() }}"
+                {% if not n %}disabled{% endif %} aria-selected="false">
+          <span class="day-chip-dow">{{ 'Today' if day.date == today else day.date.strftime('%a') }}</span>
+          <span class="day-chip-date">{{ day.date.strftime('%b') }} {{ day.date.day }}</span>
+          <span class="day-chip-meta">{{ {'closed': 'Closed', 'full': 'Booked up', 'past': 'No times left'}.get(day.status, n ~ ' open') }}</span>
+        </button>
+      {% endfor %}
+    </div>
+
+    <h2 class="section-title">Pick a time</h2>
+    {% for day in days if day.slots %}
+      <div class="slot-grid" data-day-panel="{{ day.date.isoformat() }}" hidden>
+        {% for slot in day.slots %}
+          <button type="button" class="slot" data-start="{{ slot.start.isoformat(timespec='minutes') }}"
+                  data-label="{{ slot.start | long_date }} at {{ slot.start | clock }}">
+            {{ slot.start | clock }}
+            {% if store.capacity > 1 and slot.remaining == 1 %}<small>last spot</small>{% endif %}
+          </button>
+        {% endfor %}
+      </div>
+    {% else %}
+      <div class="empty-state small">
+        <p>No open times in the next {{ site.booking.days_ahead }} days. Please try another location
+          {% if store.phone %}or call <a href="tel:{{ store.phone }}">{{ store.phone }}</a>{% endif %}.</p>
+      </div>
+    {% endfor %}
+    <p class="muted small mt">Times are shown in the store's local time.</p>
+
+    <form method="post" action="{{ url_for('client.book_slot', store_id=store.id) }}" class="confirm-bar" id="confirm-bar" hidden>
+      {{ m.csrf() }}
+      <input type="hidden" name="starts_at" id="starts-at">
+      {% if current %}<input type="hidden" name="replace" value="1">{% endif %}
+      <div class="confirm-summary">
+        <span class="muted small">{{ 'Move to' if current else 'Selected' }}</span>
+        <strong id="selected-label"></strong>
+      </div>
+      {% if current_user %}
+        <label class="field grow">
+          <span class="sr-only">Notes</span>
+          <input type="text" name="notes" maxlength="500" placeholder="{{ site.booking.notes_prompt }}">
+        </label>
+        <button class="btn btn-primary btn-lg" type="submit">{{ 'Move appointment' if current else 'Book appointment' }}</button>
+      {% else %}
+        <a class="btn btn-primary btn-lg" id="signin-to-book"
+           data-base="{{ url_for('auth.login', next=url_for('client.store', store_id=store.id)) }}"
+           href="{{ url_for('auth.login', next=url_for('client.store', store_id=store.id)) }}">Sign in to book</a>
+      {% endif %}
+    </form>
+  </section>
+
+  <aside class="stack">
+    <section class="card">
+      <h2 class="card-title">Hours</h2>
+      {{ m.hours_table(store) }}
+    </section>
+    <section class="card">
+      <h2 class="card-title">Location</h2>
+      <p>{{ store.full_address }}</p>
+      {% if store.phone %}<p><a href="tel:{{ store.phone }}">{{ store.phone }}</a></p>{% endif %}
+      <a class="btn btn-secondary btn-sm" target="_blank" rel="noopener"
+         href="https://www.google.com/maps/dir/?api=1&destination={{ store.full_address | urlencode }}">Get directions</a>
+      {% if store.notes %}<p class="store-notes">{{ store.notes }}</p>{% endif %}
+    </section>
+  </aside>
+</div>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='js/booking.js') }}"></script>
+{% endblock %}

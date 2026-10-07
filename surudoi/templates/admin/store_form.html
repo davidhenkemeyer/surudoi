@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% import "partials/macros.html" as m with context %}
+{% block title %}{{ 'Add store' if is_new else store.name }} · Admin{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<a class="back-link" href="{{ url_for('admin.stores') }}">← Stores</a>
+<div class="page-head">
+  <h1>{{ 'Add a store' if is_new else store.name }}</h1>
+  {% if not is_new %}
+    <div class="row gap-sm wrap">
+      <a class="btn btn-ghost" href="{{ url_for('client.store', store_id=store.id) }}">Booking page</a>
+      <a class="btn btn-secondary" href="{{ url_for('manage.day', store=store.id) }}">Appointments</a>
+    </div>
+  {% endif %}
+</div>
+
+<form method="post" class="card form-card">
+  {{ m.csrf() }}
+  {% with full=true %}{% include "partials/store_fields.html" %}{% endwith %}
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">{{ 'Add store' if is_new else 'Save changes' }}</button>
+    <a class="btn btn-ghost" href="{{ url_for('admin.stores') }}">Cancel</a>
+  </div>
+</form>
+
+{% if not is_new %}
+  <section class="card danger-zone mt-lg">
+    <div>
+      <h2 class="card-title">Delete this store</h2>
+      <p class="muted small">Removes the store and all of its appointment history. To stop bookings but keep history, uncheck “Taking bookings” instead.</p>
+    </div>
+    <form method="post" action="{{ url_for('admin.store_delete', store_id=store.id) }}"
+          data-confirm="Permanently delete {{ store.name }} and all its appointments?">
+      {{ m.csrf() }}
+      <button class="btn btn-danger" type="submit">Delete store</button>
+    </form>
+  </section>
+{% endif %}
+{% endblock %}

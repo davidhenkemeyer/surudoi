@@ -1,0 +1,60 @@
+{% extends "base.html" %}
+{% import "partials/macros.html" as m with context %}
+{% block title %}Users · Admin{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<div class="page-head">
+  <h1>Users <span class="count">{{ users | length }}{% if users | length == 300 %}+{% endif %}</span></h1>
+</div>
+
+<details class="card import-card" id="add-user">
+  <summary><strong>Add a user</strong> <span class="muted small">— clients can also just sign in with their email</span></summary>
+  <form method="post" action="{{ url_for('admin.user_new') }}" class="form-grid mt" data-role-form>
+    {{ m.csrf() }}
+    <label class="field"><span>Email</span><input type="email" name="email" required></label>
+    <label class="field"><span>Name <small class="hint">optional</small></span><input name="name"></label>
+    <label class="field"><span>Role</span>
+      <select name="role" data-role-select>
+        {% for key, label in ROLES.items() %}<option value="{{ key }}">{{ label }}</option>{% endfor %}
+      </select></label>
+    <label class="field" data-store-field hidden><span>Store</span>
+      <select name="store_id">
+        <option value="">Choose a store…</option>
+        {% for s in stores %}<option value="{{ s.id }}">{{ s.name }} — {{ s.city }}, {{ s.state }}</option>{% endfor %}
+      </select></label>
+    <div class="form-actions span-2"><button class="btn btn-primary" type="submit">Add user</button></div>
+  </form>
+</details>
+
+<form method="get" class="toolbar">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search email or name">
+  <select name="role" data-autosubmit aria-label="Role">
+    <option value="">All roles</option>
+    {% for key, label in ROLES.items() %}<option value="{{ key }}" {{ 'selected' if role == key }}>{{ label }}</option>{% endfor %}
+  </select>
+  <button class="btn btn-secondary" type="submit">Search</button>
+  {% if q or role or request.args.get('blocked') %}<a class="btn btn-ghost" href="{{ url_for('admin.users') }}">Clear</a>{% endif %}
+</form>
+
+<div class="card flush table-wrap">
+  <table class="table">
+    <thead><tr><th>Email</th><th>Role</th><th>Store</th><th>No-shows</th><th>Joined</th><th></th></tr></thead>
+    <tbody>
+      {% for u in users %}
+        <tr>
+          <td><a href="{{ url_for('admin.user_edit', user_id=u.id) }}"><strong>{{ u.email }}</strong></a>
+            {% if u.name %}<span class="muted small block">{{ u.name }}</span>{% endif %}
+            {% if u.blocked %}<span class="pill pill-canceled">Blocked</span>{% endif %}</td>
+          <td>{{ ROLES.get(u.role, u.role) }}</td>
+          <td>{{ u.store.name if u.store else '' }}</td>
+          <td>{% if no_shows.get(u.id) %}<span class="pill pill-warn">{{ no_shows[u.id] }}</span>{% else %}<span class="muted">0</span>{% endif %}</td>
+          <td class="muted">{{ u.created_at.strftime('%b %d, %Y') }}</td>
+          <td class="actions"><a class="btn btn-secondary btn-sm" href="{{ url_for('admin.user_edit', user_id=u.id) }}">Edit</a></td>
+        </tr>
+      {% else %}
+        <tr><td colspan="6" class="empty-state muted">No users found.</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}

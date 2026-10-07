@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block title %}{{ store.name }} · Settings{% endblock %}
+{% block content %}
+<a class="back-link" href="{{ url_for('manage.day', store=store.id) }}">← Appointments</a>
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Store settings</p>
+    <h1>{{ store.name }}</h1>
+    <p class="muted">{{ store.full_address }}</p>
+  </div>
+  <a class="btn btn-ghost" href="{{ url_for('client.store', store_id=store.id) }}">View booking page</a>
+</div>
+<form method="post" class="card form-card">
+  <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+  {% with full=false %}{% include "partials/store_fields.html" %}{% endwith %}
+  <div class="form-actions">
+    <button class="btn btn-primary" type="submit">Save changes</button>
+  </div>
+</form>
+{% endblock %}

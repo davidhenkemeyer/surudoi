@@ -1,0 +1,7 @@
+{% set ep = request.endpoint or '' %}
+<nav class="subnav" aria-label="Admin">
+  <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if ep == 'admin.dashboard' }}">Overview</a>
+  <a href="{{ url_for('admin.stores') }}" class="{{ 'active' if ep.startswith('admin.store') }}">Stores</a>
+  <a href="{{ url_for('admin.users') }}" class="{{ 'active' if ep.startswith('admin.user') }}">Users</a>
+  <a href="{{ url_for('manage.day') }}">Store dashboards</a>
+</nav>

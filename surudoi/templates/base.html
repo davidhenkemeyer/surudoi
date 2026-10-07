@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}{{ site.brand.app_name }}{% endblock %}</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/app.css') }}">
+  <style>:root { --brand: {{ site.brand.primary_color }}; }</style>
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <header class="topbar">
+    <div class="topbar-inner">
+      <a class="brand" href="{{ url_for('client.home') }}">
+        <span class="brand-mark">{{ site.brand.logo_text }}</span>
+        <span class="brand-name">{{ site.brand.app_name }}</span>
+      </a>
+      <nav class="nav" aria-label="Main">
+        {% set ep = request.endpoint or '' %}
+        <a href="{{ url_for('client.home') }}" class="{{ 'active' if ep in ('client.home', 'client.store') }}">Find a store</a>
+        {% if current_user %}
+          <a href="{{ url_for('client.appointments') }}" class="{{ 'active' if ep == 'client.appointments' }}">My appointment</a>
+          {% if current_user.is_staff %}
+            <a href="{{ url_for('manage.day') }}" class="{{ 'active' if ep.startswith('manage.') }}">Store</a>
+          {% endif %}
+          {% if current_user.is_admin %}
+            <a href="{{ url_for('admin.dashboard') }}" class="{{ 'active' if ep.startswith('admin.') }}">Admin</a>
+          {% endif %}
+        {% endif %}
+      </nav>
+      <div class="account">
+        {% if current_user %}
+          <span class="account-email" title="{{ current_user.email }}">{{ current_user.email }}</span>
+          <form method="post" action="{{ url_for('auth.logout') }}">
+            <input type="hidden" name="csrf_token" value="{{ csrf_token() }}">
+            <button class="btn btn-ghost btn-sm" type="submit">Sign out</button>
+          </form>
+        {% else %}
+          <a class="btn btn-primary btn-sm" href="{{ url_for('auth.login', next=request.full_path if request.endpoint != 'auth.login' else None) }}">Sign in</a>
+        {% endif %}
+      </div>
+    </div>
+  </header>
+
+  <main class="{% block main_class %}container{% endblock %}">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        <div class="flashes" role="status">
+          {% for category, message in messages %}
+            <div class="flash flash-{{ category }}">{{ message }}</div>
+          {% endfor %}
+        </div>
+      {% endif %}
+    {% endwith %}
+    {% block content %}{% endblock %}
+  </main>
+
+  <script src="{{ url_for('static', filename='js/app.js') }}"></script>
+  {% block scripts %}{% endblock %}
+</body>
+</html>

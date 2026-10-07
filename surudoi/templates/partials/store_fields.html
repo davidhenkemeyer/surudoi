@@ -1,0 +1,73 @@
+{# Shared store form fields. Expects `store`, `form` (submitted values or None) and `full`. #}
+{% macro val(name, default) -%}{{ form.get(name, '') if form else default }}{%- endmacro %}
+
+{% if full %}
+<fieldset class="form-section">
+  <legend>Location</legend>
+  <div class="form-grid">
+    <label class="field span-2"><span>Store name</span>
+      <input name="name" value="{{ val('name', store.name or '') }}" required></label>
+    <label class="field span-2"><span>Street address</span>
+      <input name="address" value="{{ val('address', store.address or '') }}" required autocomplete="off"></label>
+    <label class="field"><span>City</span><input name="city" value="{{ val('city', store.city or '') }}"></label>
+    <div class="form-grid inner">
+      <label class="field"><span>State</span><input name="state" value="{{ val('state', store.state or '') }}" maxlength="40"></label>
+      <label class="field"><span>ZIP</span><input name="zip_code" value="{{ val('zip_code', store.zip_code or '') }}"></label>
+    </div>
+    <label class="field"><span>Phone</span><input name="phone" type="tel" value="{{ val('phone', store.phone or '') }}"></label>
+    <label class="field"><span>Email</span><input name="email" type="email" value="{{ val('email', store.email or '') }}"></label>
+    <label class="field"><span>Latitude</span>
+      <input name="latitude" inputmode="decimal" value="{{ val('latitude', store.latitude if store.latitude is not none else '') }}" placeholder="Looked up from the address"></label>
+    <label class="field"><span>Longitude</span>
+      <input name="longitude" inputmode="decimal" value="{{ val('longitude', store.longitude if store.longitude is not none else '') }}" placeholder="Looked up from the address"></label>
+    <label class="field span-2"><span>Time zone</span>
+      <input name="timezone" value="{{ val('timezone', store.timezone or '') }}" placeholder="Worked out from the state, e.g. America/Denver" list="tz-list">
+      <datalist id="tz-list">
+        {% for tz in ['America/New_York', 'America/Chicago', 'America/Denver', 'America/Phoenix', 'America/Los_Angeles', 'America/Anchorage', 'Pacific/Honolulu', 'America/Toronto', 'America/Vancouver'] %}<option value="{{ tz }}">{% endfor %}
+      </datalist>
+    </label>
+  </div>
+</fieldset>
+{% endif %}
+
+<fieldset class="form-section">
+  <legend>Booking</legend>
+  <div class="form-grid">
+    <label class="field"><span>Price ($)</span>
+      <input name="price" inputmode="decimal" value="{{ val('price', '%.2f' % (store.price_cents / 100)) }}" required>
+      <small class="hint">Shown to clients; paid at the store. 0 = free.</small></label>
+    <label class="field"><span>Appointment length (minutes)</span>
+      <input name="slot_minutes" type="number" min="5" max="480" step="5" value="{{ val('slot_minutes', store.slot_minutes) }}" required></label>
+    <label class="field"><span>Bookings per time slot</span>
+      <input name="capacity" type="number" min="1" max="100" value="{{ val('capacity', store.capacity) }}" required>
+      <small class="hint">How many people you can serve at once.</small></label>
+    <label class="field check-field">
+      <input type="checkbox" name="active" value="1" {{ 'checked' if (form.get('active') if form else store.active) }}>
+      <span>Taking bookings <small class="hint">Uncheck to hide this store from clients.</small></span>
+    </label>
+    <label class="field span-2"><span>Notes for clients</span>
+      <textarea name="notes" rows="2" maxlength="1000" placeholder="e.g. Drop skates off at the service counter.">{{ val('notes', store.notes or '') }}</textarea></label>
+  </div>
+</fieldset>
+
+<fieldset class="form-section">
+  <legend>Hours</legend>
+  <div class="hours-editor">
+    {% for d in DAYS %}
+      {% set span = store.hours_for(d) if store.hours else none %}
+      {% set is_open = (form.get('open_' ~ d) if form else span) %}
+      <div class="hours-row" data-hours-row>
+        <label class="check-inline">
+          <input type="checkbox" name="open_{{ d }}" value="1" {{ 'checked' if is_open }} data-hours-toggle>
+          <span>{{ DAY_NAMES[d] }}</span>
+        </label>
+        <input type="time" name="{{ d }}_open" aria-label="{{ DAY_NAMES[d] }} opens"
+               value="{{ val(d ~ '_open', span[0].strftime('%H:%M') if span else '10:00') }}">
+        <span class="muted">to</span>
+        <input type="time" name="{{ d }}_close" aria-label="{{ DAY_NAMES[d] }} closes"
+               value="{{ val(d ~ '_close', span[1].strftime('%H:%M') if span else '18:00') }}">
+        <span class="closed-label muted">Closed</span>
+      </div>
+    {% endfor %}
+  </div>
+</fieldset>

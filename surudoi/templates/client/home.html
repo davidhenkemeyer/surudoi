@@ -1,0 +1,45 @@
+{% extends "base.html" %}
+{% block head %}
+  <link rel="stylesheet" href="{{ url_for('static', filename='vendor/leaflet/leaflet.css') }}">
+{% endblock %}
+{% block main_class %}finder-main{% endblock %}
+{% block content %}
+{% if appointment %}
+  <div class="banner">
+    <div>
+      <strong>You're booked {{ appointment.starts_at | day_label(appointment.store.now_local().date()) }} at {{ appointment.starts_at | clock }}</strong>
+      <span class="muted">· {{ appointment.store.name }}</span>
+    </div>
+    <span class="muted small">Booking another time will move this appointment.</span>
+    <a class="btn btn-secondary btn-sm" href="{{ url_for('client.appointments') }}">View</a>
+  </div>
+{% endif %}
+
+<section class="finder">
+  <aside class="finder-panel">
+    <div class="finder-head">
+      <h1>{{ site.brand.tagline }}</h1>
+      <p class="muted">Showing {{ site.brand.name }} locations within {{ radius | int }} miles.</p>
+      <form id="place-search" class="search" role="search">
+        <input type="search" name="q" placeholder="City, state or ZIP" aria-label="Search for a city or ZIP code" autocomplete="postal-code">
+        <button class="btn btn-primary" type="submit">Search</button>
+      </form>
+      <button id="use-location" class="btn btn-link small" type="button">
+        <svg width="14" height="14" viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 8a4 4 0 1 0 0 8 4 4 0 0 0 0-8Zm9 3h-2.07A7 7 0 0 0 13 5.07V3h-2v2.07A7 7 0 0 0 5.07 11H3v2h2.07A7 7 0 0 0 11 18.93V21h2v-2.07A7 7 0 0 0 18.93 13H21v-2Zm-9 6a5 5 0 1 1 0-10 5 5 0 0 1 0 10Z"/></svg>
+        Use my current location
+      </button>
+    </div>
+    <p id="finder-status" class="finder-status" aria-live="polite">Finding your location…</p>
+    <ol id="store-list" class="store-list"></ol>
+  </aside>
+  <div class="finder-map">
+    <div id="map" data-radius="{{ radius }}"
+         data-near-url="{{ url_for('client.stores_near') }}"
+         data-places-url="{{ url_for('client.places') }}"></div>
+  </div>
+</section>
+{% endblock %}
+{% block scripts %}
+  <script src="{{ url_for('static', filename='vendor/leaflet/leaflet.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/finder.js') }}"></script>
+{% endblock %}

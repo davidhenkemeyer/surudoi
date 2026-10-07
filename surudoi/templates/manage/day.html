@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% import "partials/macros.html" as m with context %}
+{% block title %}{{ store.name }} · Appointments{% endblock %}
+{% block content %}
+<div class="page-head">
+  <div>
+    <p class="eyebrow">Store dashboard</p>
+    <h1>{{ store.name }}</h1>
+  </div>
+  <div class="row gap-sm wrap">
+    {% if all_stores %}
+      <form method="get" class="inline-form">
+        <label class="sr-only" for="store-picker">Store</label>
+        <select id="store-picker" name="store" data-autosubmit>
+          {% for s in all_stores %}<option value="{{ s.id }}" {{ 'selected' if s.id == store.id }}>{{ s.name }} — {{ s.city }}, {{ s.state }}</option>{% endfor %}
+        </select>
+      </form>
+    {% endif %}
+    <a class="btn btn-secondary" href="{{ url_for('manage.settings', store=store.id) }}">Hours &amp; settings</a>
+  </div>
+</div>
+
+<div class="week-strip">
+  {% for d, n in week %}
+    <a class="week-day {{ 'selected' if d == selected }}" href="{{ url_for('manage.day', store=store.id, date=d.isoformat()) }}">
+      <span>{{ 'Today' if d == today else d.strftime('%a') }}</span>
+      <strong>{{ d.day }}</strong>
+      <small>{{ n }} booked</small>
+    </a>
+  {% endfor %}
+</div>
+
+<section class="card flush">
+  <header class="day-head">
+    <a class="btn btn-ghost btn-icon" href="{{ url_for('manage.day', store=store.id, date=prev_day.isoformat()) }}" aria-label="Previous day">‹</a>
+    <form method="get" class="day-picker">
+      <input type="hidden" name="store" value="{{ store.id }}">
+      <h2>{{ selected | long_date }}</h2>
+      <input type="date" name="date" value="{{ selected.isoformat() }}" data-autosubmit aria-label="Choose date">
+    </form>
+    <a class="btn btn-ghost btn-icon" href="{{ url_for('manage.day', store=store.id, date=next_day.isoformat()) }}" aria-label="Next day">›</a>
+    {% if selected != today %}<a class="btn btn-secondary btn-sm" href="{{ url_for('manage.day', store=store.id) }}">Today</a>{% endif %}
+    <div class="day-counts">
+      <span><strong>{{ counts.booked }}</strong> booked</span>
+      <span><strong>{{ counts.completed }}</strong> done</span>
+      <span><strong>{{ counts.no_show }}</strong> no-show</span>
+    </div>
+  </header>
+
+  {% if appts %}
+    <ul class="appt-list">
+      {% for a in appts %}
+        <li class="appt-row status-{{ a.status }}" id="appt-{{ a.id }}">
+          <div class="appt-time">{{ a.starts_at | clock }}</div>
+          <div class="appt-who">
+            <strong>{{ a.user.name or a.user.email }}</strong>
+            {% if a.user.name %}<span class="muted small">{{ a.user.email }}</span>{% endif %}
+            {% if no_shows.get(a.user_id) %}<span class="pill pill-warn">{{ no_shows[a.user_id] }} no-show{{ 's' if no_shows[a.user_id] > 1 }}</span>{% endif %}
+            {% if a.notes %}<p class="appt-notes">“{{ a.notes }}”</p>{% endif %}
+          </div>
+          <div class="appt-status">{{ m.status_pill(a.status) }}</div>
+          <div class="appt-actions">
+            {% if a.status == 'booked' %}
+              {% for status, label, cls in [('completed', 'Complete', 'btn-primary'), ('no_show', 'No-show', 'btn-secondary'), ('canceled', 'Cancel', 'btn-danger-ghost')] %}
+                <form method="post" action="{{ url_for('manage.update_status', appt_id=a.id) }}"
+                      {% if status == 'canceled' %}data-confirm="Cancel {{ a.user.email }}'s {{ a.starts_at | clock }} appointment?"{% endif %}>
+                  {{ m.csrf() }}<input type="hidden" name="status" value="{{ status }}">
+                  <button class="btn btn-sm {{ cls }}" type="submit">{{ label }}</button>
+                </form>
+              {% endfor %}
+            {% else %}
+              {% if a.status == 'expired' %}
+                <form method="post" action="{{ url_for('manage.update_status', appt_id=a.id) }}">
+                  {{ m.csrf() }}<input type="hidden" name="status" value="completed">
+                  <button class="btn btn-sm btn-secondary" type="submit">Mark complete</button>
+                </form>
+                <form method="post" action="{{ url_for('manage.update_status', appt_id=a.id) }}">
+                  {{ m.csrf() }}<input type="hidden" name="status" value="no_show">
+                  <button class="btn btn-sm btn-ghost" type="submit">No-show</button>
+                </form>
+              {% else %}
+                <form method="post" action="{{ url_for('manage.update_status', appt_id=a.id) }}">
+                  {{ m.csrf() }}<input type="hidden" name="status" value="booked">
+                  <button class="btn btn-sm btn-ghost" type="submit">Undo</button>
+                </form>
+              {% endif %}
+            {% endif %}
+          </div>
+        </li>
+      {% endfor %}
+    </ul>
+  {% else %}
+    <div class="empty-state">
+      <p class="muted">{{ 'No appointments booked for this day.' if store.hours_for(DAYS[selected.weekday()]) else 'The store is closed this day.' }}</p>
+    </div>
+  {% endif %}
+</section>
+{% endblock %}

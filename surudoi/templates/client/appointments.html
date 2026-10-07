@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% import "partials/macros.html" as m with context %}
+{% block title %}My appointment · {{ site.brand.app_name }}{% endblock %}
+{% block content %}
+<div class="page-head">
+  <h1>My appointment</h1>
+</div>
+
+{% if current %}
+  {{ m.appointment_card(current) }}
+{% else %}
+  <section class="card empty-state">
+    <h2>No upcoming appointment</h2>
+    <p class="muted">Find a location near you and pick a time — it only takes a minute.</p>
+    <a class="btn btn-primary mt" href="{{ url_for('client.home') }}">Find a store</a>
+  </section>
+{% endif %}
+
+{% if history %}
+  <h2 class="section-title mt-lg">Past appointments</h2>
+  <div class="card flush">
+    <table class="table">
+      <thead><tr><th>Date</th><th>Location</th><th>Status</th></tr></thead>
+      <tbody>
+        {% for a in history %}
+          <tr>
+            <td>{{ a.starts_at | long_date }}, {{ a.starts_at | clock }}</td>
+            <td>{{ a.store.name }}</td>
+            <td>{{ m.status_pill(a.status) }}</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+{% endif %}
+{% endblock %}

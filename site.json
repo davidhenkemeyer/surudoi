@@ -1,0 +1,22 @@
+{
+  "brand": {
+    "name": "Pure Hockey",
+    "app_name": "Pure Hockey Sharpening",
+    "tagline": "Book a skate sharpening near you",
+    "service": "Skate sharpening",
+    "logo_text": "PH",
+    "primary_color": "#0b4fd8"
+  },
+  "booking": {
+    "search_radius_miles": 50,
+    "days_ahead": 14,
+    "min_lead_minutes": 60,
+    "default_price": 10,
+    "default_slot_minutes": 15,
+    "default_capacity": 2,
+    "notes_prompt": "Notes (optional) — e.g. 2 pairs, 5/8\" hollow"
+  },
+  "auth": {
+    "email_codes_for": "admins"
+  }
+}

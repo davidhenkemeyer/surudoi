@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block title %}{{ code }} · {{ site.brand.app_name }}{% endblock %}
+{% block main_class %}container narrow{% endblock %}
+{% block content %}
+<section class="card empty-state">
+  <p class="eyebrow">Error {{ code }}</p>
+  <h1>{{ message }}</h1>
+  <a class="btn btn-primary mt" href="{{ url_for('client.home') }}">Back to home</a>
+</section>
+{% endblock %}

@@ -1,0 +1,65 @@
+{% extends "base.html" %}
+{% import "partials/macros.html" as m with context %}
+{% block title %}{{ user.email }} · Admin{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<a class="back-link" href="{{ url_for('admin.users') }}">← Users</a>
+<div class="page-head">
+  <div>
+    <h1>{{ user.email }}</h1>
+    <p class="muted">Joined {{ user.created_at.strftime('%b %d, %Y') }}{% if user.last_login_at %} · last signed in {{ user.last_login_at.strftime('%b %d, %Y') }}{% endif %}</p>
+  </div>
+</div>
+
+<div class="two-col">
+  <form method="post" class="card form-card" data-role-form>
+    {{ m.csrf() }}
+    <div class="form-grid">
+      <label class="field span-2"><span>Email</span><input type="email" name="email" value="{{ user.email }}" required></label>
+      <label class="field span-2"><span>Name</span><input name="name" value="{{ user.name }}"></label>
+      <label class="field"><span>Role</span>
+        <select name="role" data-role-select>
+          {% for key, label in ROLES.items() %}<option value="{{ key }}" {{ 'selected' if user.role == key }}>{{ label }}</option>{% endfor %}
+        </select></label>
+      <label class="field" data-store-field {{ 'hidden' if user.role != 'store_admin' }}><span>Store</span>
+        <select name="store_id">
+          <option value="">Choose a store…</option>
+          {% for s in stores %}<option value="{{ s.id }}" {{ 'selected' if user.store_id == s.id }}>{{ s.name }} — {{ s.city }}, {{ s.state }}</option>{% endfor %}
+        </select></label>
+      <label class="field check-field span-2">
+        <input type="checkbox" name="blocked" value="1" {{ 'checked' if user.blocked }}>
+        <span>Blocked <small class="hint">Can't sign in or book. Blocking cancels any open appointment.</small></span>
+      </label>
+    </div>
+    <div class="form-actions"><button class="btn btn-primary" type="submit">Save</button></div>
+  </form>
+
+  <section class="card flush">
+    <h2 class="card-title pad">Appointments</h2>
+    {% if appts %}
+      <table class="table">
+        <tbody>
+          {% for a in appts %}
+            <tr><td>{{ a.starts_at.strftime('%b %d, %Y') }} {{ a.starts_at | clock }}</td><td>{{ a.store.name }}</td><td>{{ m.status_pill(a.status) }}</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    {% else %}
+      <p class="muted pad">No appointments yet.</p>
+    {% endif %}
+  </section>
+</div>
+
+{% if user.id != current_user.id %}
+  <section class="card danger-zone mt-lg">
+    <div>
+      <h2 class="card-title">Delete user</h2>
+      <p class="muted small">Removes the account and its appointment history. They can sign up again with the same email — use Blocked to keep them out.</p>
+    </div>
+    <form method="post" action="{{ url_for('admin.user_delete', user_id=user.id) }}" data-confirm="Permanently delete {{ user.email }}?">
+      {{ m.csrf() }}
+      <button class="btn btn-danger" type="submit">Delete user</button>
+    </form>
+  </section>
+{% endif %}
+{% endblock %}

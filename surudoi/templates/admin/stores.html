@@ -1,0 +1,70 @@
+{% extends "base.html" %}
+{% import "partials/macros.html" as m with context %}
+{% block title %}Stores · Admin{% endblock %}
+{% block content %}
+{% include "admin/_nav.html" %}
+<div class="page-head">
+  <h1>Stores <span class="count">{{ stores | length }}</span></h1>
+  <div class="row gap-sm wrap">
+    <a class="btn btn-ghost" href="{{ url_for('admin.store_export') }}">Download CSV</a>
+    <a class="btn btn-primary" href="{{ url_for('admin.store_new') }}">Add store</a>
+  </div>
+</div>
+
+<details class="card import-card" id="import" {{ 'open' if not stores }}>
+  <summary><strong>Import stores from a CSV file</strong> <span class="muted small">— adds new stores and updates existing ones by name</span></summary>
+  <form method="post" action="{{ url_for('admin.store_import') }}" enctype="multipart/form-data" class="import-form">
+    {{ m.csrf() }}
+    <input type="file" name="file" accept=".csv,text/csv" required>
+    <label class="check-inline"><input type="checkbox" name="geocode" value="1" checked> Look up map locations for new addresses</label>
+    <button class="btn btn-primary" type="submit" data-busy="Importing…">Import</button>
+  </form>
+  <div class="muted small csv-help">
+    <p><strong>Columns</strong> (header names are flexible; only <code>Name</code> and <code>Address</code> are required):
+      <code>Name, Address, City, State, Zip, Phone, Email, Price, SlotMinutes, Capacity, Latitude, Longitude, Timezone, Active, Notes</code>,
+      plus hours as <code>MondayOpen, MondayClose, …</code> (e.g. <code>1100</code>, <code>11:00</code> or <code>11am</code>; blank or <code>closed</code> = closed).</p>
+    <p>Tip: download the current list, edit it in a spreadsheet, and import it back.</p>
+  </div>
+</details>
+
+<form method="get" class="toolbar">
+  <input type="search" name="q" value="{{ q }}" placeholder="Search name, city, state or ZIP">
+  <button class="btn btn-secondary" type="submit">Search</button>
+  {% if q %}<a class="btn btn-ghost" href="{{ url_for('admin.stores') }}">Clear</a>{% endif %}
+</form>
+{% set unmapped = stores | rejectattr('has_location') | list %}
+{% if unmapped %}
+  <form method="post" action="{{ url_for('admin.store_geocode') }}" class="notice row gap-sm wrap">
+    {{ m.csrf() }}
+    <span><strong>{{ unmapped | length }}</strong> store(s) aren't on the map yet, so clients can't find them.</span>
+    <button class="btn btn-secondary btn-sm" type="submit" data-busy="Looking up…">Look up locations</button>
+  </form>
+{% endif %}
+
+<div class="card flush table-wrap">
+  <table class="table">
+    <thead>
+      <tr><th>Store</th><th>Location</th><th>Price</th><th>Slots</th><th>Open bookings</th><th>Status</th><th></th></tr>
+    </thead>
+    <tbody>
+      {% for s in stores %}
+        <tr>
+          <td><a href="{{ url_for('admin.store_edit', store_id=s.id) }}"><strong>{{ s.name }}</strong></a>
+            {% if not s.has_location %}<span class="pill pill-warn">Not on map</span>{% endif %}</td>
+          <td>{{ s.city }}, {{ s.state }} <span class="muted">{{ s.zip_code }}</span></td>
+          <td>{{ s.price_cents | money }}</td>
+          <td class="muted">{{ s.slot_minutes }} min × {{ s.capacity }}</td>
+          <td>{{ open_counts.get(s.id, 0) }}</td>
+          <td>{% if s.active %}<span class="pill pill-completed">Active</span>{% else %}<span class="pill pill-canceled">Hidden</span>{% endif %}</td>
+          <td class="actions">
+            <a class="btn btn-ghost btn-sm" href="{{ url_for('manage.day', store=s.id) }}">Appointments</a>
+            <a class="btn btn-secondary btn-sm" href="{{ url_for('admin.store_edit', store_id=s.id) }}">Edit</a>
+          </td>
+        </tr>
+      {% else %}
+        <tr><td colspan="7" class="empty-state muted">{{ 'No stores match your search.' if q else 'No stores yet — import a CSV or add one.' }}</td></tr>
+      {% endfor %}
+    </tbody>
+  </table>
+</div>
+{% endblock %}
